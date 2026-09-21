@@ -91,7 +91,7 @@ const Footer: React.FC = () => {
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center">
           <p className="text-gray-400 text-sm">
-            © 2025 Payless Travel. All rights reserved. | Terms of Service | Privacy Policy
+            © 2026 Payless Travel. All rights reserved. | Terms of Service | Privacy Policy
           </p>
         </div>
       </div>
