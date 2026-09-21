@@ -148,6 +148,9 @@ const GetYourCard: React.FC = () => {
 
     setFormData({ name: '', phone: '', governorate: '' });
     setIsSubmitted(true);
+    if (window.fbq) {
+      window.fbq('track', 'Lead');
+    }
   } catch (error) {
     console.error('Error submitting form:', error);
     alert('Something went wrong. Please try again.');
