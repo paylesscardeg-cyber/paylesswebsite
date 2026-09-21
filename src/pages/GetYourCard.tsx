@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import emailjs from '@emailjs/browser';
 import { Link } from 'react-router-dom';
+
+const GOOGLE_SCRIPT_URL = import.meta.env.VITE_GOOGLE_SCRIPT_URL || '';
 import { 
   CreditCard, 
   User, 
@@ -124,26 +125,31 @@ const GetYourCard: React.FC = () => {
 
   if (!validateForm()) {
     return;
+   }
+
+  if (!GOOGLE_SCRIPT_URL) {
+    alert('Google Apps Script URL is not configured. Please set VITE_GOOGLE_SCRIPT_URL in your environment.');
+    return;
   }
 
   setIsSubmitting(true);
 
   try {
-    const templateParams = {
-      name: formData.name,
-      phone: formData.phone,
-      governorate: formData.governorate,
-    };
+    const body = new FormData();
+    body.append('name', formData.name);
+    body.append('phone', formData.phone);
+    body.append('governorate', formData.governorate);
 
-    await emailjs.send(
-      'service_yir3c7j',     // ✅ Service ID
-      'template_4inqu47',    // ✅ Template ID
-      templateParams
-    );
+    await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      body,
+      mode: 'no-cors',
+    });
 
+    setFormData({ name: '', phone: '', governorate: '' });
     setIsSubmitted(true);
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error('Error submitting form:', error);
     alert('Something went wrong. Please try again.');
   } finally {
     setIsSubmitting(false);
@@ -164,7 +170,7 @@ const GetYourCard: React.FC = () => {
             </h1>
             
             <p className="text-lg text-gray-600 mb-8">
-              Thank you for choosing Payless! We've received your card application and will contact you within 24 hours to complete the process.
+              Thank you! Your card request has been received successfully. We'll get back to you shortly.
             </p>
             
             <div className="bg-sky-50 border border-sky-200 rounded-lg p-6 mb-8">
