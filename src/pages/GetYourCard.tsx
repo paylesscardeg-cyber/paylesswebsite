@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-const GOOGLE_SCRIPT_URL = import.meta.env.VITE_GOOGLE_SCRIPT_URL || '';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyImmlgfdKEF86fCR-vR2wXb9cqIy27xXH5jjpoRkulSj0frH63-ONpty9kC6vFIJlC/exec';
 import { 
   CreditCard, 
   User, 
