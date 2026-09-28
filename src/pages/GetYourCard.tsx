@@ -29,8 +29,8 @@ interface FormErrors {
 }
 
 const governorateRegions: Record<string, string[]> = {
-  Cairo: ['Nasr City', 'New Cairo', 'Maadi', 'Heliopolis', 'Downtown Cairo', 'Zamalek', 'Shubra', 'Mokattam'],
-  Giza: ['Dokki', 'Mohandessin', '6th of October City', 'Haram', 'Faisal', 'Agouza', 'Garden City'],
+  Cairo: ['Downtown Cairo', 'Garden City', 'Zamalek', 'Abdeen', 'Bulaq', 'Manial', 'Sayeda Zeinab', 'Mokattam', 'Nasr City', 'Heliopolis', 'New Cairo', 'Fifth Settlement', 'First Settlement', 'Third Settlement', 'El Rehab', 'Madinaty', 'Sheraton', 'Almaza', 'Korba', 'Ain Shams', 'El Marg', 'El Matareya', 'Shubra', 'Shoubra El Kheima', 'Maadi', 'Helwan'],
+  Giza: ['Dokki', 'Mohandessin', '6th of October City', 'Haram', 'Faisal', 'Agouza', 'Giza', 'Ard El Lewa', 'Mit Okba', 'Boulaq El Dakrour', 'Imbaba'],
   Alexandria: ['Smouha', 'Miami', 'Gleem', 'Sidi Gaber', 'Montaza', 'Roushdy', 'Stanley'],
   Qalyubia: ['Banha', 'Qaha', 'Shubra El Kheima', 'Kafr Saad'],
   'Port Said': ['Port Fouad', 'El Manakh', 'El Sharq', 'El Arab'],
