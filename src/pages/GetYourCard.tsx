@@ -18,19 +18,52 @@ interface FormData {
   name: string;
   phone: string;
   governorate: string;
+  region: string;
 }
 
 interface FormErrors {
   name?: string;
   phone?: string;
   governorate?: string;
+  region?: string;
 }
+
+const governorateRegions: Record<string, string[]> = {
+  Cairo: ['Nasr City', 'New Cairo', 'Maadi', 'Heliopolis', 'Downtown Cairo', 'Zamalek', 'Shubra', 'Mokattam'],
+  Giza: ['Dokki', 'Mohandessin', '6th of October City', 'Haram', 'Faisal', 'Agouza', 'Garden City'],
+  Alexandria: ['Smouha', 'Miami', 'Gleem', 'Sidi Gaber', 'Montaza', 'Roushdy', 'Stanley'],
+  Qalyubia: ['Banha', 'Qaha', 'Shubra El Kheima', 'Kafr Saad'],
+  'Port Said': ['Port Fouad', 'El Manakh', 'El Sharq', 'El Arab'],
+  Suez: ['Arbaeen', 'Faisal', 'Ganayen', 'Ataqa'],
+  Luxor: ['East Bank', 'West Bank', 'Karnak'],
+  Aswan: ['Aswan City', 'Edfu', 'Kom Ombo'],
+  Asyut: ['Asyut City', 'Dairut', 'Manfalut'],
+  Beheira: ['Damanhour', 'Kafr El Dawwar', 'Rashid', 'Edko', 'Itay El Barud'],
+  'Beni Suef': ['Beni Suef City', 'Bibah', 'Al Wasta'],
+  Dakahlia: ['Mansoura', 'Talkha', 'Mit Ghamr', 'Sherbin'],
+  Damietta: ['Damietta City', 'Ras El Bar', 'Faraskour'],
+  Fayyum: ['Fayyum City', 'Sinnuris', 'Tamiya'],
+  Gharbia: ['Tanta', 'Mahalla', 'Kafr El Zayyat', 'Zefta'],
+  Ismailia: ['Ismailia City', 'Fayed', 'Qantara'],
+  'Kafr el-Sheikh': ['Kafr El Sheikh City', 'Desouk', 'Fuwa', 'Baltim'],
+  Matrouh: ['Marsa Matrouh', 'El Alamein', 'Siwa Oasis'],
+  Minya: ['Minya City', 'Mallawi', 'Beni Mazar'],
+  Monufia: ['Shibin El Kom', 'Sadat City', 'Menouf', 'Quesna'],
+  'New Valley': ['Kharga', 'Dakhla', 'Farafra', 'Baris'],
+  'North Sinai': ['Arish', 'Sheikh Zuweid', 'Bir al-Abd'],
+  Qena: ['Qena City', 'Naqada', 'Qus'],
+  'Red Sea': ['Hurghada', 'Safaga', 'El Quseir', 'Marsa Alam'],
+  Sharqia: ['Zagazig', 'Belbeis', '10th of Ramadan City', 'Abu Hammad'],
+  Sohag: ['Sohag City', 'Akhmim', 'Tahta', 'Girga'],
+  'South Sinai': ['Sharm El Sheikh', 'Dahab', 'Nuweiba', 'El Tor', 'Saint Catherine']
+};
 
 const GetYourCard: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
     name: '',
     phone: '',
-    governorate: ''
+    governorate: '',
+    region: ''
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -84,6 +117,10 @@ const GetYourCard: React.FC = () => {
       newErrors.governorate = 'Please select a governorate';
     }
 
+    if (!formData.region) {
+      newErrors.region = 'Please select a region';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -109,10 +146,13 @@ const GetYourCard: React.FC = () => {
     
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
+      ...(name === 'governorate' ? { region: '' } : {})
     }));
-    
-    if (errors[name as keyof FormErrors]) {
+
+    if (name === 'governorate') {
+      setErrors(prev => ({ ...prev, governorate: undefined, region: undefined }));
+    } else if (errors[name as keyof FormErrors]) {
       setErrors(prev => ({
         ...prev,
         [name]: undefined
@@ -139,6 +179,7 @@ const GetYourCard: React.FC = () => {
     body.append('name', formData.name);
     body.append('phone', formData.phone);
     body.append('governorate', formData.governorate);
+    body.append('region', formData.region);
 
     await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
@@ -146,7 +187,7 @@ const GetYourCard: React.FC = () => {
       mode: 'no-cors',
     });
 
-    setFormData({ name: '', phone: '', governorate: '' });
+    setFormData({ name: '', phone: '', governorate: '', region: '' });
     setIsSubmitted(true);
     if (window.fbq) {
       window.fbq('track', 'Lead');
@@ -341,7 +382,7 @@ const GetYourCard: React.FC = () => {
                     
                     <div>
                       <label htmlFor="governorate" className="block text-sm font-medium text-gray-700 mb-2">
-                        Governorate *
+                        Governorate / المحافظة *
                       </label>
                       <select
                         id="governorate"
@@ -359,6 +400,32 @@ const GetYourCard: React.FC = () => {
                       </select>
                       {errors.governorate && (
                         <p className="mt-1 text-sm text-red-600">{errors.governorate}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label htmlFor="region" className="block text-sm font-medium text-gray-700 mb-2">
+                        Region / المنطقة *
+                      </label>
+                      <select
+                        id="region"
+                        name="region"
+                        value={formData.region}
+                        onChange={handleInputChange}
+                        disabled={!formData.governorate}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors duration-200 ${
+                          errors.region ? 'border-red-300' : 'border-gray-300'
+                        } ${!formData.governorate ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                      >
+                        <option value="">
+                          {formData.governorate ? 'Select your region' : 'Please select a governorate first'}
+                        </option>
+                        {(governorateRegions[formData.governorate] || []).map((reg) => (
+                          <option key={reg} value={reg}>{reg}</option>
+                        ))}
+                      </select>
+                      {errors.region && (
+                        <p className="mt-1 text-sm text-red-600">{errors.region}</p>
                       )}
                     </div>
                   </div>
