@@ -382,7 +382,7 @@ const GetYourCard: React.FC = () => {
                     
                     <div>
                       <label htmlFor="governorate" className="block text-sm font-medium text-gray-700 mb-2">
-                        Governorate / المحافظة *
+                        Governorate *
                       </label>
                       <select
                         id="governorate"
@@ -405,7 +405,7 @@ const GetYourCard: React.FC = () => {
 
                     <div>
                       <label htmlFor="region" className="block text-sm font-medium text-gray-700 mb-2">
-                        Region / المنطقة *
+                        Region *
                       </label>
                       <select
                         id="region"
