@@ -1,61 +1,56 @@
 import React, { useState } from 'react';
-import emailjs from '@emailjs/browser';
 import { Link } from 'react-router-dom';
-import { 
-  Calendar, 
-  User, 
-  Phone, 
-  Mail, 
-  CreditCard, 
+import { egyptianGovernorates, governorateRegions } from '../data/governorates';
+
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzJaYsVxlxFVPSR3TtUlhItOYfo3y8OyR3wX5tZoNsNDEI3ixSrKghCHYAVYljM4Vlv/exec';
+import {
+  Calendar,
+  User,
+  Phone,
   CheckCircle,
   ArrowLeft,
   Star,
   Shield,
   Clock,
-  MapPin
+  MapPin,
+  Tag
 } from 'lucide-react';
 
 interface FormData {
   name: string;
   phone: string;
-  email: string;
-  idSerial: string;
-  reservationType: string;
-  checkInDate: string;
-  checkOutDate: string;
+  offer: string;
+  governorate: string;
+  region: string;
 }
 
 interface FormErrors {
   name?: string;
   phone?: string;
-  email?: string;
-  idSerial?: string;
-  reservationType?: string;
-  checkInDate?: string;
-  checkOutDate?: string;
+  offer?: string;
+  governorate?: string;
+  region?: string;
 }
+
+const offerOptions = [
+  'El Sokhna Hotels',
+  'Sharm El Sheikh Hotels',
+  'Hurghada Hotels',
+  'Other'
+];
 
 const Reservation: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
     name: '',
     phone: '',
-    email: '',
-    idSerial: '',
-    reservationType: '',
-    checkInDate: '',
-    checkOutDate: ''
+    offer: '',
+    governorate: '',
+    region: ''
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-
-  const reservationTypes = [
-    'Hotel',
-    'Visa',
-    'Ticket',
-    'Voucher'
-  ];
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -70,32 +65,16 @@ const Reservation: React.FC = () => {
       newErrors.phone = 'Phone number must be at least 11 digits';
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+    if (!formData.offer) {
+      newErrors.offer = 'Please select an offer';
     }
 
-    if (!formData.idSerial.trim()) {
-      newErrors.idSerial = 'Payless Card Number is required';
-    } else if (formData.idSerial.length !== 16 || !formData.idSerial.startsWith('40235050')) {
-      newErrors.idSerial = 'Make sure you enter your Payless card number correctly.';
+    if (!formData.governorate) {
+      newErrors.governorate = 'Please select a governorate';
     }
 
-    if (!formData.reservationType) {
-      newErrors.reservationType = 'Please select a reservation type';
-    }
-
-    if (!formData.checkInDate) {
-      newErrors.checkInDate = 'Check-in date is required';
-    }
-
-    if (!formData.checkOutDate) {
-      newErrors.checkOutDate = 'Check-out date is required';
-    }
-
-    if (formData.checkInDate && formData.checkOutDate && formData.checkInDate >= formData.checkOutDate) {
-      newErrors.checkOutDate = 'Check-out date must be after check-in date';
+    if (!formData.region) {
+      newErrors.region = 'Please select a region';
     }
 
     setErrors(newErrors);
@@ -104,29 +83,30 @@ const Reservation: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    
-    // Restrict to English characters only for text inputs
-    if (e.target.type === 'text' || e.target.type === 'email') {
-      const englishOnlyRegex = /^[a-zA-Z0-9\s@._-]*$/;
+
+    if (e.target.type === 'text') {
+      const englishOnlyRegex = /^[a-zA-Z\s]*$/;
       if (!englishOnlyRegex.test(value)) {
         return;
       }
     }
-    
-    // Restrict to numbers only for phone and ID serial
-    if (name === 'phone' || name === 'idSerial') {
+
+    if (name === 'phone') {
       const numbersOnlyRegex = /^[0-9]*$/;
       if (!numbersOnlyRegex.test(value)) {
         return;
       }
     }
-    
+
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
+      ...(name === 'governorate' ? { region: '' } : {})
     }));
-    
-    if (errors[name as keyof FormErrors]) {
+
+    if (name === 'governorate') {
+      setErrors(prev => ({ ...prev, governorate: undefined, region: undefined }));
+    } else if (errors[name as keyof FormErrors]) {
       setErrors(prev => ({
         ...prev,
         [name]: undefined
@@ -135,40 +115,42 @@ const Reservation: React.FC = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!validateForm()) {
-    return;
-  }
+    if (!validateForm()) {
+      return;
+    }
 
-  setIsSubmitting(true);
+    setIsSubmitting(true);
 
-  try {
-    const templateParams = {
-        name: formData.name,
-        phone: formData.phone,
-        email: formData.email,
-        idSerial: formData.idSerial,
-        reservationType: formData.reservationType,
-        checkInDate: formData.checkInDate,
-        checkOutDate: formData.checkOutDate,
-    };
+    try {
+      const body = new FormData();
+      body.append('name', formData.name);
+      body.append('phone', formData.phone);
+      body.append('offer', formData.offer);
+      body.append('governorate', formData.governorate);
+      body.append('region', formData.region);
+      body.append('timestamp', new Date().toISOString());
 
-    await emailjs.send(
-      'service_yir3c7j',     // ✅ Service ID
-      'template_ya7smge',    // ✅ Template ID
-      templateParams
-    );
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        body,
+        mode: 'no-cors',
+      });
 
-    setIsSubmitted(true);
-  } catch (error) {
-    console.error('Error sending email:', error);
-    alert('Something went wrong. Please try again.');
-  } finally {
-    setIsSubmitting(false);
-  }
-};
-  
+      setFormData({ name: '', phone: '', offer: '', governorate: '', region: '' });
+      setIsSubmitted(true);
+      if (window.fbq) {
+        window.fbq('track', 'Lead');
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (isSubmitted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-50 py-12">
@@ -177,21 +159,21 @@ const Reservation: React.FC = () => {
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
-            
+
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
               Reservation Submitted Successfully!
             </h1>
-            
+
             <p className="text-lg text-gray-600 mb-8">
               Thank you for using Payless! We've received your reservation request and will contact you within 24 hours to confirm the details.
             </p>
-            
+
             <div className="bg-sky-50 border border-sky-200 rounded-lg p-6 mb-8">
               <h3 className="font-semibold text-gray-900 mb-3">What happens next?</h3>
               <div className="space-y-2 text-sm text-gray-600 text-left">
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-sky-500 rounded-full"></div>
-                  <span>We'll verify your Payless card details</span>
+                  <span>We'll verify your information</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-sky-500 rounded-full"></div>
@@ -203,7 +185,7 @@ const Reservation: React.FC = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/"
@@ -215,15 +197,7 @@ const Reservation: React.FC = () => {
               <button
                 onClick={() => {
                   setIsSubmitted(false);
-                  setFormData({
-                    name: '',
-                    phone: '',
-                    email: '',
-                    idSerial: '',
-                    reservationType: '',
-                    checkInDate: '',
-                    checkOutDate: ''
-                  });
+                  setFormData({ name: '', phone: '', offer: '', governorate: '', region: '' });
                 }}
                 className="border border-sky-500 text-sky-600 hover:bg-sky-50 px-6 py-3 rounded-lg font-medium transition-colors duration-200"
               >
@@ -241,29 +215,23 @@ const Reservation: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="inline-flex items-center space-x-2 text-sky-600 hover:text-sky-700 mb-6 transition-colors duration-200"
           >
             <ArrowLeft className="h-4 w-4" />
             <span className="text-sm font-medium">Back to Home</span>
           </Link>
-          
+
           <div className="flex justify-center mb-6">
             <div className="bg-sky-500 p-4 rounded-full">
               <Calendar className="h-8 w-8 text-white" />
             </div>
           </div>
-          
+
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             Make a Reservation
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-4">
-            For existing Payless cardholders
-          </p>
-          <p className="text-lg text-orange-600 font-semibold max-w-3xl mx-auto">
-            Specifically your registered phone number & your membership ID - Make sure to put your data accurately
-          </p>
         </div>
 
         <div className="grid grid-cols-1 gap-8">
@@ -271,7 +239,7 @@ const Reservation: React.FC = () => {
           <div className="w-full">
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-6">Reservation Benefits</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="flex items-start space-x-3">
                   <div className="bg-green-100 p-2 rounded-lg">
@@ -282,7 +250,7 @@ const Reservation: React.FC = () => {
                     <p className="text-sm text-gray-600">Exclusive member pricing</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-3">
                   <div className="bg-blue-100 p-2 rounded-lg">
                     <Clock className="h-4 w-4 text-blue-600" />
@@ -292,7 +260,7 @@ const Reservation: React.FC = () => {
                     <p className="text-sm text-gray-600">24-hour confirmation</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-3">
                   <div className="bg-orange-100 p-2 rounded-lg">
                     <Star className="h-4 w-4 text-orange-600" />
@@ -303,7 +271,7 @@ const Reservation: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="mt-6 pt-6 border-t border-gray-200 text-center">
                 <p className="text-sm text-gray-500 text-center">
                   Exclusive access for Payless members
@@ -322,8 +290,8 @@ const Reservation: React.FC = () => {
                     <User className="h-5 w-5 text-sky-500" />
                     <span>Personal Information</span>
                   </h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div>
                       <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                         Name *
@@ -343,7 +311,7 @@ const Reservation: React.FC = () => {
                         <p className="mt-1 text-sm text-red-600">{errors.name}</p>
                       )}
                     </div>
-                    
+
                     <div>
                       <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
                         Phone *
@@ -363,121 +331,76 @@ const Reservation: React.FC = () => {
                         <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
                       )}
                     </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                        Email *
-                      </label>
-                      <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors duration-200 ${
-                          errors.email ? 'border-red-300' : 'border-gray-300'
-                        }`}
-                        placeholder="your.email@example.com"
-                      />
-                      {errors.email && (
-                        <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-                      )}
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="idSerial" className="block text-sm font-medium text-gray-700 mb-2">
-                        ID Serial (Payless Card Number) *
-                      </label>
-                      <input
-                        type="text"
-                        id="idSerial"
-                        name="idSerial"
-                        value={formData.idSerial}
-                        onChange={handleInputChange}
-                        maxLength={16}
-                        inputMode="numeric"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors duration-200 ${
-                          errors.idSerial ? 'border-red-300' : 'border-gray-300'
-                        }`}
-                        placeholder="xxxxxxxxxxxxxxxx"
-                      />
-                      {errors.idSerial && (
-                        <p className="mt-1 text-sm text-red-600">{errors.idSerial}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
 
-                {/* Reservation Details */}
-                <div className="pt-6 border-t border-gray-200">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
-                    <MapPin className="h-5 w-5 text-sky-500" />
-                    <span>Reservation Details</span>
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
-                      <label htmlFor="reservationType" className="block text-sm font-medium text-gray-700 mb-2">
-                        Reservation Type *
+                      <label htmlFor="offer" className="block text-sm font-medium text-gray-700 mb-2">
+                        Offer *
                       </label>
                       <select
-                        id="reservationType"
-                        name="reservationType"
-                        value={formData.reservationType}
+                        id="offer"
+                        name="offer"
+                        value={formData.offer}
                         onChange={handleInputChange}
                         className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors duration-200 ${
-                          errors.reservationType ? 'border-red-300' : 'border-gray-300'
+                          errors.offer ? 'border-red-300' : 'border-gray-300'
                         }`}
                       >
-                        <option value="">Select type</option>
-                        {reservationTypes.map((type) => (
-                          <option key={type} value={type}>{type}</option>
+                        <option value="">Select an offer</option>
+                        {offerOptions.map((offer) => (
+                          <option key={offer} value={offer}>{offer}</option>
                         ))}
                       </select>
-                      {errors.reservationType && (
-                        <p className="mt-1 text-sm text-red-600">{errors.reservationType}</p>
+                      {errors.offer && (
+                        <p className="mt-1 text-sm text-red-600">{errors.offer}</p>
                       )}
                     </div>
-                    
+
                     <div>
-                      <label htmlFor="checkInDate" className="block text-sm font-medium text-gray-700 mb-2">
-                        Check-in Date *
+                      <label htmlFor="governorate" className="block text-sm font-medium text-gray-700 mb-2">
+                        Governorate *
                       </label>
-                      <input
-                        type="date"
-                        id="checkInDate"
-                        name="checkInDate"
-                        value={formData.checkInDate}
+                      <select
+                        id="governorate"
+                        name="governorate"
+                        value={formData.governorate}
                         onChange={handleInputChange}
-                        min={new Date().toISOString().split('T')[0]}
                         className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors duration-200 ${
-                          errors.checkInDate ? 'border-red-300' : 'border-gray-300'
+                          errors.governorate ? 'border-red-300' : 'border-gray-300'
                         }`}
-                      />
-                      {errors.checkInDate && (
-                        <p className="mt-1 text-sm text-red-600">{errors.checkInDate}</p>
+                      >
+                        <option value="">Select your governorate</option>
+                        {egyptianGovernorates.map((gov) => (
+                          <option key={gov} value={gov}>{gov}</option>
+                        ))}
+                      </select>
+                      {errors.governorate && (
+                        <p className="mt-1 text-sm text-red-600">{errors.governorate}</p>
                       )}
                     </div>
-                    
+
                     <div>
-                      <label htmlFor="checkOutDate" className="block text-sm font-medium text-gray-700 mb-2">
-                        Check-out Date *
+                      <label htmlFor="region" className="block text-sm font-medium text-gray-700 mb-2">
+                        Region *
                       </label>
-                      <input
-                        type="date"
-                        id="checkOutDate"
-                        name="checkOutDate"
-                        value={formData.checkOutDate}
+                      <select
+                        id="region"
+                        name="region"
+                        value={formData.region}
                         onChange={handleInputChange}
-                        min={formData.checkInDate || new Date().toISOString().split('T')[0]}
+                        disabled={!formData.governorate}
                         className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors duration-200 ${
-                          errors.checkOutDate ? 'border-red-300' : 'border-gray-300'
-                        }`}
-                      />
-                      {errors.checkOutDate && (
-                        <p className="mt-1 text-sm text-red-600">{errors.checkOutDate}</p>
+                          errors.region ? 'border-red-300' : 'border-gray-300'
+                        } ${!formData.governorate ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                      >
+                        <option value="">
+                          {formData.governorate ? 'Select your region' : 'Please select a governorate first'}
+                        </option>
+                        {(governorateRegions[formData.governorate] || []).map((reg) => (
+                          <option key={reg} value={reg}>{reg}</option>
+                        ))}
+                      </select>
+                      {errors.region && (
+                        <p className="mt-1 text-sm text-red-600">{errors.region}</p>
                       )}
                     </div>
                   </div>
@@ -502,7 +425,7 @@ const Reservation: React.FC = () => {
                       </div>
                     )}
                   </button>
-                  
+
                   <p className="text-center text-sm text-gray-500 mt-4">
                     By submitting this form, you agree to our Terms of Service and Privacy Policy
                   </p>

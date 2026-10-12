@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { egyptianGovernorates, governorateRegions } from '../data/governorates';
 
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzJaYsVxlxFVPSR3TtUlhItOYfo3y8OyR3wX5tZoNsNDEI3ixSrKghCHYAVYljM4Vlv/exec';
 import { 
@@ -28,36 +29,6 @@ interface FormErrors {
   region?: string;
 }
 
-const governorateRegions: Record<string, string[]> = {
-  Cairo: ['Downtown Cairo', 'Garden City', 'Zamalek', 'Abdeen', 'Bulaq', 'Manial', 'Sayeda Zeinab', 'Mokattam', 'Nasr City', 'Heliopolis', 'New Cairo', 'Fifth Settlement', 'First Settlement', 'Third Settlement', 'El Rehab', 'Madinaty', 'Sheraton', 'Almaza', 'Korba', 'Ain Shams', 'El Marg', 'El Matareya', 'Shubra', 'Shoubra El Kheima', 'Maadi', 'Helwan'],
-  Giza: ['Dokki', 'Mohandessin', '6th of October City', 'Haram', 'Faisal', 'Agouza', 'Giza', 'Ard El Lewa', 'Mit Okba', 'Boulaq El Dakrour', 'Imbaba'],
-  Alexandria: ['Smouha', 'Miami', 'Gleem', 'Sidi Gaber', 'Montaza', 'Roushdy', 'Stanley'],
-  Qalyubia: ['Banha', 'Qaha', 'Shubra El Kheima', 'Kafr Saad'],
-  'Port Said': ['Port Fouad', 'El Manakh', 'El Sharq', 'El Arab'],
-  Suez: ['Arbaeen', 'Faisal', 'Ganayen', 'Ataqa'],
-  Luxor: ['East Bank', 'West Bank', 'Karnak'],
-  Aswan: ['Aswan City', 'Edfu', 'Kom Ombo'],
-  Asyut: ['Asyut City', 'Dairut', 'Manfalut'],
-  Beheira: ['Damanhour', 'Kafr El Dawwar', 'Rashid', 'Edko', 'Itay El Barud'],
-  'Beni Suef': ['Beni Suef City', 'Bibah', 'Al Wasta'],
-  Dakahlia: ['Mansoura', 'Talkha', 'Mit Ghamr', 'Sherbin'],
-  Damietta: ['Damietta City', 'Ras El Bar', 'Faraskour'],
-  Fayyum: ['Fayyum City', 'Sinnuris', 'Tamiya'],
-  Gharbia: ['Tanta', 'Mahalla', 'Kafr El Zayyat', 'Zefta'],
-  Ismailia: ['Ismailia City', 'Fayed', 'Qantara'],
-  'Kafr el-Sheikh': ['Kafr El Sheikh City', 'Desouk', 'Fuwa', 'Baltim'],
-  Matrouh: ['Marsa Matrouh', 'El Alamein', 'Siwa Oasis'],
-  Minya: ['Minya City', 'Mallawi', 'Beni Mazar'],
-  Monufia: ['Shibin El Kom', 'Sadat City', 'Menouf', 'Quesna'],
-  'New Valley': ['Kharga', 'Dakhla', 'Farafra', 'Baris'],
-  'North Sinai': ['Arish', 'Sheikh Zuweid', 'Bir al-Abd'],
-  Qena: ['Qena City', 'Naqada', 'Qus'],
-  'Red Sea': ['Hurghada', 'Safaga', 'El Quseir', 'Marsa Alam'],
-  Sharqia: ['Zagazig', 'Belbeis', '10th of Ramadan City', 'Abu Hammad'],
-  Sohag: ['Sohag City', 'Akhmim', 'Tahta', 'Girga'],
-  'South Sinai': ['Sharm El Sheikh', 'Dahab', 'Nuweiba', 'El Tor', 'Saint Catherine']
-};
-
 const GetYourCard: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -69,36 +40,6 @@ const GetYourCard: React.FC = () => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-
-  const egyptianGovernorates = [
-    'Cairo',
-    'Alexandria',
-    'Giza',
-    'Qalyubia',
-    'Port Said',
-    'Suez',
-    'Luxor',
-    'Aswan',
-    'Asyut',
-    'Beheira',
-    'Beni Suef',
-    'Dakahlia',
-    'Damietta',
-    'Fayyum',
-    'Gharbia',
-    'Ismailia',
-    'Kafr el-Sheikh',
-    'Matrouh',
-    'Minya',
-    'Monufia',
-    'New Valley',
-    'North Sinai',
-    'Qena',
-    'Red Sea',
-    'Sharqia',
-    'Sohag',
-    'South Sinai'
-  ];
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
