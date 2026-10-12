@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { egyptianGovernorates, governorateRegions } from '../data/governorates';
 
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzJaYsVxlxFVPSR3TtUlhItOYfo3y8OyR3wX5tZoNsNDEI3ixSrKghCHYAVYljM4Vlv/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwK1_i5TDihrrtk6mIpKeD-U3yUv8dViPVaaFaekLMNN4UuCt4diy6jUuChOZ-24KEm/exec';
 import {
   Calendar,
   User,
